@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:responsive_table/responsive_table.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(MyApp());
 }
 
@@ -11,6 +12,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
@@ -23,142 +25,31 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class DataPickerPage extends StatefulWidget {
-  @override
-  _DataPickerPageState createState() => _DataPickerPageState();
-}
-
-class _DataPickerPageState extends State<DataPickerPage> {
-  @override
-  Widget build(BuildContext context) {
-    return Container();
-  }
-}
-
 class DataPage extends StatefulWidget {
-  DataPage({Key key}) : super(key: key);
+  DataPage({Key? key}) : super(key: key);
   @override
   _DataPageState createState() => _DataPageState();
 }
 
 class _DataPageState extends State<DataPage> {
-  List<DatatableHeader> _headers = [
-    DatatableHeader(
-        text: "ID",
-        value: "id",
-        show: true,
-        sortable: true,
-        textAlign: TextAlign.center),
-    DatatableHeader(
-        text: "Name",
-        value: "name",
-        show: true,
-        flex: 2,
-        sortable: true,
-        editable: true,
-        textAlign: TextAlign.left),
-    DatatableHeader(
-        text: "SKU",
-        value: "sku",
-        show: true,
-        sortable: true,
-        textAlign: TextAlign.center),
-    DatatableHeader(
-        text: "Category",
-        value: "category",
-        show: true,
-        sortable: true,
-        textAlign: TextAlign.left),
-    DatatableHeader(
-        text: "Price",
-        value: "price",
-        show: true,
-        sortable: true,
-        textAlign: TextAlign.left),
-    DatatableHeader(
-        text: "Margin",
-        value: "margin",
-        show: true,
-        sortable: true,
-        textAlign: TextAlign.left),
-    DatatableHeader(
-        text: "In Stock",
-        value: "in_stock",
-        show: true,
-        sortable: true,
-        textAlign: TextAlign.left),
-    DatatableHeader(
-        text: "Alert",
-        value: "alert",
-        show: true,
-        sortable: true,
-        textAlign: TextAlign.left),
-    DatatableHeader(
-        text: "Received",
-        value: "received",
-        show: true,
-        sortable: false,
-        sourceBuilder: (value, row) {
-          List list = List.from(value);
-          return Container(
-            child: Column(
-              children: [
-                Container(
-                  width: 85,
-                  child: LinearProgressIndicator(
-                    value: list.first / list.last,
-                  ),
-                ),
-                Text("${list.first} of ${list.last}")
-              ],
-            ),
-          );
-        },
-        textAlign: TextAlign.center),
-  ];
-
-  Widget _dropContainer(data) {
-    List<Widget> _children = data.entries.map<Widget>((entry) {
-      Widget w = Row(
-        children: [
-          Text(entry.key.toString()),
-          Spacer(),
-          Text(entry.value.toString()),
-        ],
-      );
-      return w;
-    }).toList();
-    return Container(
-      // height: 100,
-      child: Column(
-        // children: [
-        //   Expanded(
-        //       child: Container(
-        //     color: Colors.red,
-        //     height: 50,
-        //   )),
-
-        // ],
-        children: _children,
-      ),
-    );
-  }
+  late List<DatatableHeader> _headers;
 
   List<int> _perPages = [10, 20, 50, 100];
   int _total = 100;
-  int _currentPerPage = 10;
-  List<bool> _expanded;
-  String _searchKey = "id";
+  int? _currentPerPage = 10;
+  List<bool>? _expanded;
+  String? _searchKey = "id";
 
   int _currentPage = 1;
   bool _isSearch = false;
-  List<Map<String, dynamic>> _sourceOriginal = List<Map<String, dynamic>>();
-  List<Map<String, dynamic>> _sourceFiltered = List<Map<String, dynamic>>();
-  List<Map<String, dynamic>> _source = List<Map<String, dynamic>>();
-  List<Map<String, dynamic>> _selecteds = List<Map<String, dynamic>>();
+  List<Map<String, dynamic>> _sourceOriginal = [];
+  List<Map<String, dynamic>> _sourceFiltered = [];
+  List<Map<String, dynamic>> _source = [];
+  List<Map<String, dynamic>> _selecteds = [];
+  // ignore: unused_field
   String _selectableKey = "id";
 
-  String _sortColumn;
+  String? _sortColumn;
   bool _sortAscending = true;
   bool _isLoading = true;
   bool _showSelect = true;
@@ -166,9 +57,10 @@ class _DataPageState extends State<DataPage> {
 
   List<Map<String, dynamic>> _generateData({int n: 100}) {
     final List source = List.filled(n, Random.secure());
-    List<Map<String, dynamic>> temps = List<Map<String, dynamic>>();
+    List<Map<String, dynamic>> temps = [];
     var i = 1;
     print(i);
+    // ignore: unused_local_variable
     for (var data in source) {
       temps.add({
         "id": i,
@@ -187,12 +79,12 @@ class _DataPageState extends State<DataPage> {
     return temps;
   }
 
-  _initData() async {
+  _initializeData() async {
     _mockPullData();
   }
 
   _mockPullData() async {
-    _expanded = List.generate(_currentPerPage, (index) => false);
+    _expanded = List.generate(_currentPerPage!, (index) => false);
 
     setState(() => _isLoading = true);
     Future.delayed(Duration(seconds: 3)).then((value) {
@@ -200,19 +92,19 @@ class _DataPageState extends State<DataPage> {
       _sourceOriginal.addAll(_generateData(n: random.nextInt(10000)));
       _sourceFiltered = _sourceOriginal;
       _total = _sourceFiltered.length;
-      _source = _sourceFiltered.getRange(0, _currentPerPage).toList();
+      _source = _sourceFiltered.getRange(0, _currentPerPage!).toList();
       setState(() => _isLoading = false);
     });
   }
 
   _resetData({start: 0}) async {
     setState(() => _isLoading = true);
-    var _expanded_len =
-        _total - start < _currentPerPage ? _total - start : _currentPerPage;
+    var _expandedLen =
+        _total - start < _currentPerPage! ? _total - start : _currentPerPage;
     Future.delayed(Duration(seconds: 0)).then((value) {
-      _expanded = List.generate(_expanded_len, (index) => false);
+      _expanded = List.generate(_expandedLen as int, (index) => false);
       _source.clear();
-      _source = _sourceFiltered.getRange(start, start + _expanded_len).toList();
+      _source = _sourceFiltered.getRange(start, start + _expandedLen).toList();
       setState(() => _isLoading = false);
     });
   }
@@ -225,7 +117,7 @@ class _DataPageState extends State<DataPage> {
         _sourceFiltered = _sourceOriginal;
       } else {
         _sourceFiltered = _sourceOriginal
-            .where((data) => data[_searchKey]
+            .where((data) => data[_searchKey!]
                 .toString()
                 .toLowerCase()
                 .contains(value.toString().toLowerCase()))
@@ -233,7 +125,7 @@ class _DataPageState extends State<DataPage> {
       }
 
       _total = _sourceFiltered.length;
-      var _rangeTop = _total < _currentPerPage ? _total : _currentPerPage;
+      var _rangeTop = _total < _currentPerPage! ? _total : _currentPerPage!;
       _expanded = List.generate(_rangeTop, (index) => false);
       _source = _sourceFiltered.getRange(0, _rangeTop).toList();
     } catch (e) {
@@ -245,7 +137,84 @@ class _DataPageState extends State<DataPage> {
   @override
   void initState() {
     super.initState();
-    _initData();
+
+    /// set headers
+    _headers = [
+      DatatableHeader(
+          text: "ID",
+          value: "id",
+          show: true,
+          sortable: true,
+          textAlign: TextAlign.center),
+      DatatableHeader(
+          text: "Name",
+          value: "name",
+          show: true,
+          flex: 2,
+          sortable: true,
+          editable: true,
+          textAlign: TextAlign.left),
+      DatatableHeader(
+          text: "SKU",
+          value: "sku",
+          show: true,
+          sortable: true,
+          textAlign: TextAlign.center),
+      DatatableHeader(
+          text: "Category",
+          value: "category",
+          show: true,
+          sortable: true,
+          textAlign: TextAlign.left),
+      DatatableHeader(
+          text: "Price",
+          value: "price",
+          show: true,
+          sortable: true,
+          textAlign: TextAlign.left),
+      DatatableHeader(
+          text: "Margin",
+          value: "margin",
+          show: true,
+          sortable: true,
+          textAlign: TextAlign.left),
+      DatatableHeader(
+          text: "In Stock",
+          value: "in_stock",
+          show: true,
+          sortable: true,
+          textAlign: TextAlign.left),
+      DatatableHeader(
+          text: "Alert",
+          value: "alert",
+          show: true,
+          sortable: true,
+          textAlign: TextAlign.left),
+      DatatableHeader(
+          text: "Received",
+          value: "received",
+          show: true,
+          sortable: false,
+          sourceBuilder: (value, row) {
+            List list = List.from(value);
+            return Container(
+              child: Column(
+                children: [
+                  Container(
+                    width: 85,
+                    child: LinearProgressIndicator(
+                      value: list.first / list.last,
+                    ),
+                  ),
+                  Text("${list.first} of ${list.last}")
+                ],
+              ),
+            );
+          },
+          textAlign: TextAlign.center),
+    ];
+
+    _initializeData();
   }
 
   @override
@@ -257,16 +226,30 @@ class _DataPageState extends State<DataPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("DATA TABLE"),
+        title: Text("RESPONSIVE DATA TABLE"),
         actions: [
           IconButton(
-              icon: Icon(Icons.refresh),
-              onPressed: () {
-                _initData();
-              })
+            onPressed: _initializeData,
+            icon: Icon(Icons.refresh_sharp),
+          ),
         ],
       ),
-
+      drawer: Drawer(
+        child: ListView(
+          children: [
+            ListTile(
+              leading: Icon(Icons.home),
+              title: Text("home"),
+              onTap: () {},
+            ),
+            ListTile(
+              leading: Icon(Icons.storage),
+              title: Text("data"),
+              onTap: () {},
+            )
+          ],
+        ),
+      ),
       body: SingleChildScrollView(
           child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
@@ -283,14 +266,19 @@ class _DataPageState extends State<DataPage> {
                 shadowColor: Colors.black,
                 clipBehavior: Clip.none,
                 child: ResponsiveDatatable(
-                  title: null,
+                  title: TextButton.icon(
+                    onPressed: () => {},
+                    icon: Icon(Icons.add),
+                    label: Text("new item"),
+                  ),
+                  reponseScreenSizes: [ScreenSize.xs],
                   actions: [
                     if (_isSearch)
                       Expanded(
                           child: TextField(
                         decoration: InputDecoration(
                             hintText: 'Enter search term based on ' +
-                                _searchKey
+                                _searchKey!
                                     .replaceAll(new RegExp('[\\W_]+'), ' ')
                                     .toUpperCase(),
                             prefixIcon: IconButton(
@@ -299,6 +287,7 @@ class _DataPageState extends State<DataPage> {
                                   setState(() {
                                     _isSearch = false;
                                   });
+                                  _initializeData();
                                 }),
                             suffixIcon: IconButton(
                                 icon: Icon(Icons.search), onPressed: () {})),
@@ -320,7 +309,20 @@ class _DataPageState extends State<DataPage> {
                   selecteds: _selecteds,
                   showSelect: _showSelect,
                   autoHeight: false,
-                  dropContainer: _dropContainer,
+                  dropContainer: (data) {
+                    if (int.tryParse(data['id'].toString())!.isEven) {
+                      return Text("is Even");
+                    }
+                    return _DropDownContainer(data: data);
+                  },
+                  onChangedRow: (value, header) {
+                    /// print(value);
+                    /// print(header);
+                  },
+                  onSubmittedRow: (value, header) {
+                    /// print(value);
+                    /// print(header);
+                  },
                   onTabRow: (data) {
                     print(data);
                   },
@@ -337,11 +339,12 @@ class _DataPageState extends State<DataPage> {
                         _sourceFiltered.sort((a, b) =>
                             a["$_sortColumn"].compareTo(b["$_sortColumn"]));
                       }
-                      var _range_top = _currentPerPage<_sourceFiltered.length?_currentPerPage:_sourceFiltered.length;
-                      _source =
-                          _sourceFiltered.getRange(0, _range_top).toList();
+                      var _rangeTop = _currentPerPage! < _sourceFiltered.length
+                          ? _currentPerPage!
+                          : _sourceFiltered.length;
+                      _source = _sourceFiltered.getRange(0, _rangeTop).toList();
                       _searchKey = value;
-                      
+
                       _isLoading = false;
                     });
                   },
@@ -351,7 +354,7 @@ class _DataPageState extends State<DataPage> {
                   isLoading: _isLoading,
                   onSelect: (value, item) {
                     print("$value  $item ");
-                    if (value) {
+                    if (value!) {
                       setState(() => _selecteds.add(item));
                     } else {
                       setState(
@@ -359,7 +362,7 @@ class _DataPageState extends State<DataPage> {
                     }
                   },
                   onSelectAll: (value) {
-                    if (value) {
+                    if (value!) {
                       setState(() => _selecteds =
                           _source.map((entry) => entry).toList().cast());
                     } else {
@@ -371,24 +374,26 @@ class _DataPageState extends State<DataPage> {
                       padding: EdgeInsets.symmetric(horizontal: 15),
                       child: Text("Rows per page:"),
                     ),
-                    if (_perPages != null)
+                    if (_perPages.isNotEmpty)
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 15),
-                        child: DropdownButton(
-                            value: _currentPerPage,
-                            items: _perPages
-                                .map((e) => DropdownMenuItem(
-                                      child: Text("$e"),
-                                      value: e,
-                                    ))
-                                .toList(),
-                            onChanged: (value) {
-                              setState(() {
-                                _currentPerPage = value;
-                                _currentPage = 1;
-                                _resetData();
-                              });
-                            }),
+                        child: DropdownButton<int>(
+                          value: _currentPerPage,
+                          items: _perPages
+                              .map((e) => DropdownMenuItem<int>(
+                                    child: Text("$e"),
+                                    value: e,
+                                  ))
+                              .toList(),
+                          onChanged: (dynamic value) {
+                            setState(() {
+                              _currentPerPage = value;
+                              _currentPage = 1;
+                              _resetData();
+                            });
+                          },
+                          isExpanded: false,
+                        ),
                       ),
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 15),
@@ -403,7 +408,7 @@ class _DataPageState extends State<DataPage> {
                       onPressed: _currentPage == 1
                           ? null
                           : () {
-                              var _nextSet = _currentPage - _currentPerPage;
+                              var _nextSet = _currentPage - _currentPerPage!;
                               setState(() {
                                 _currentPage = _nextSet > 1 ? _nextSet : 1;
                                 _resetData(start: _currentPage - 1);
@@ -413,31 +418,71 @@ class _DataPageState extends State<DataPage> {
                     ),
                     IconButton(
                       icon: Icon(Icons.arrow_forward_ios, size: 16),
-                      onPressed: _currentPage + _currentPerPage - 1 > _total
+                      onPressed: _currentPage + _currentPerPage! - 1 > _total
                           ? null
                           : () {
-                              var _nextSet = _currentPage + _currentPerPage;
+                              var _nextSet = _currentPage + _currentPerPage!;
 
                               setState(() {
                                 _currentPage = _nextSet < _total
                                     ? _nextSet
-                                    : _total - _currentPerPage;
+                                    : _total - _currentPerPage!;
                                 _resetData(start: _nextSet - 1);
                               });
                             },
                       padding: EdgeInsets.symmetric(horizontal: 15),
                     )
                   ],
+                  headerDecoration: BoxDecoration(
+                      color: Colors.grey,
+                      border: Border(
+                          bottom: BorderSide(color: Colors.red, width: 1))),
+                  selectedDecoration: BoxDecoration(
+                    border: Border(
+                        bottom:
+                            BorderSide(color: Colors.green[300]!, width: 1)),
+                    color: Colors.green,
+                  ),
+                  headerTextStyle: TextStyle(color: Colors.white),
+                  rowTextStyle: TextStyle(color: Colors.green),
+                  selectedTextStyle: TextStyle(color: Colors.white),
                 ),
               ),
             ),
           ])),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () {
-      //     _initData();
-      //   },
-      //   child: Icon(Icons.add),
-      // ),
+    );
+  }
+}
+
+class _DropDownContainer extends StatelessWidget {
+  final Map<String, dynamic> data;
+  const _DropDownContainer({Key? key, required this.data}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    List<Widget> _children = data.entries.map<Widget>((entry) {
+      Widget w = Row(
+        children: [
+          Text(entry.key.toString()),
+          Spacer(),
+          Text(entry.value.toString()),
+        ],
+      );
+      return w;
+    }).toList();
+
+    return Container(
+      /// height: 100,
+      child: Column(
+        /// children: [
+        ///   Expanded(
+        ///       child: Container(
+        ///     color: Colors.red,
+        ///     height: 50,
+        ///   )),
+        /// ],
+        children: _children,
+      ),
     );
   }
 }
